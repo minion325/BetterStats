@@ -1,6 +1,6 @@
 package me.saif.betterstats;
 
-import me.saif.betterstats.player.StatPlayer;
+import me.saif.betterstats.player.StatPlayerImpl;
 import me.saif.betterstats.statistics.Stat;
 import me.saif.betterstats.utils.Callback;
 import org.bukkit.OfflinePlayer;
@@ -23,7 +23,7 @@ public class BetterStatsAPI {
      * @param player Online player's stats you would like to receive
      * @return Players stats
      */
-    public StatPlayer getPlayerStats(Player player) {
+    public StatPlayerImpl getPlayerStats(Player player) {
         return this.plugin.getStatPlayerManager().getStats(player.getUniqueId());
     }
 
@@ -31,7 +31,7 @@ public class BetterStatsAPI {
      * @param player offlineplayer instance of the player's stats you wish to retrieve.
      * @return a callback which you can then add a completion listener to run code when the stat returns
      */
-    public Callback<StatPlayer> getPlayerStatsCallback(OfflinePlayer player) {
+    public Callback<StatPlayerImpl> getPlayerStatsCallback(OfflinePlayer player) {
         return this.plugin.getStatPlayerManager().getStatPlayer(player.getUniqueId());
     }
 
@@ -39,7 +39,7 @@ public class BetterStatsAPI {
      * @param name name of the player's stats you wish to retrieve.
      * @return a callback which you can then add a completion listener to run code when the stat returns
      */
-    public Callback<StatPlayer> getPlayerStats(String name) {
+    public Callback<StatPlayerImpl> getPlayerStats(String name) {
         return this.plugin.getStatPlayerManager().getStatPlayer(name);
     }
 
@@ -47,7 +47,7 @@ public class BetterStatsAPI {
      * @param uuid UUid of the player's stats you wish to retrieve.
      * @return a callback which you can then add a completion listener to run code when the stat returns
      */
-    public Callback<StatPlayer> getPlayerStats(UUID uuid) {
+    public Callback<StatPlayerImpl> getPlayerStats(UUID uuid) {
         return this.plugin.getStatPlayerManager().getStatPlayer(uuid);
     }
 
@@ -76,16 +76,48 @@ public class BetterStatsAPI {
         this.plugin.getStatisticManager().unRegisterStats(plugin, stats);
     }
 
+    /**
+     *
+     * @return All currently registered statistics in alphabetical order
+     */
     public List<Stat> getRegisteredStats() {
         return this.plugin.getStatisticManager().getRegisteredStats();
     }
 
+    /**
+     *
+     * @return All currently registered statistics in alphabetical order that are visible
+     */
     public List<Stat> getVisibleStats() {
         return this.plugin.getStatisticManager().getVisibleStats();
     }
 
+    /**
+     *
+     * @param statClass class of statstic you want to get
+     * @param <T> Instance of stat
+     * @return an instance of the stat registered with the statClass. returns null if none is registered
+     */
     public <T extends Stat> T  getStat(Class<T> statClass) {
         return this.plugin.getStatisticManager().getStat(statClass);
+    }
+
+    /**
+     *
+     * @param name name of the statistic
+     * @return whether a statistic is registered with that name
+     */
+    public boolean isRegistered(String name) {
+        return getStat(name) != null;
+    }
+
+    /**
+     *
+     * @param clazz class of the statistic
+     * @return whether a statistic is registered with that class
+     */
+    public boolean isRegistered(Class<? extends Stat> clazz) {
+        return getStat(clazz)  != null;
     }
 
     /**
