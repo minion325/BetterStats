@@ -12,19 +12,19 @@ import java.util.UUID;
 
 public interface StatPlayer{
 
-    public void setStat(Stat stat, double value);
+    void setStat(Stat stat, double value);
 
-    public double getStat(Stat stat);
+    double getStat(Stat stat);
 
-    public String getFormattedStat(Stat stat);
+    String getFormattedStat(Stat stat);
 
-    public void addToStat(Stat stat, double amount);
+    void addToStat(Stat stat, double amount);
 
-    public void removeFromStat(Stat stat, double amount);
+    void removeFromStat(Stat stat, double amount);
 
-    public void resetStat(Stat stat);
+    void resetStat(Stat stat);
 
-    public UUID getUuid();
+    UUID getUuid();
 
-    public OfflinePlayer getPlayer();
+    OfflinePlayer getPlayer();
 }
