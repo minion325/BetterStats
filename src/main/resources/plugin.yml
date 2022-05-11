@@ -1,0 +1,7 @@
+name: BetterStats
+version: '${project.version}'
+main: me.saif.betterstats.BetterStats
+prefix: "[BetterStats]"
+softdepend: [PlaceholderAPI]
+authors: [saif]
+description: A Statistics API plugin

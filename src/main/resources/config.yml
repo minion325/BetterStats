@@ -1,0 +1,17 @@
+#data management
+#if mysql is false, it defaults to sqlite (a local .db file)
+sql:
+  mysql: false
+  host: 'localhost'
+  port: 3306
+  username: 'username'
+  password: 'password'
+  database: 'database'
+
+#server name for your stats (If you are using one database for multiple servers, this will ensure that each server can have their own stats)
+server-name: 'minecraft_server'
+
+#How often cached stats should be cleared in seconds
+#This only clears cached data that is no longer relevant
+#eg. If the stats for an offline player was loaded, it would clear that but not stats loaded for online players
+cache-clearing-interval: 300
