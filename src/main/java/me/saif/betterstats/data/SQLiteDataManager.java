@@ -2,7 +2,6 @@ package me.saif.betterstats.data;
 
 import me.saif.betterstats.BetterStats;
 import me.saif.betterstats.data.database.Database;
-import me.saif.betterstats.data.database.MySQLDatabase;
 import me.saif.betterstats.data.database.SQLiteDatabase;
 import me.saif.betterstats.player.StatPlayer;
 import me.saif.betterstats.statistics.Stat;
