@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"me.saif.betterstats"},{"l":"me.saif.betterstats.data"},{"l":"me.saif.betterstats.data.database"},{"l":"me.saif.betterstats.hooks"},{"l":"me.saif.betterstats.player"},{"l":"me.saif.betterstats.statistics"},{"l":"me.saif.betterstats.utils"}];updateSearchResults();
