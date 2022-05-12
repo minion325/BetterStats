@@ -50,11 +50,12 @@ public class StatPlayerManager extends Manager {
                     removed.add(this.uuidStatMap.remove(uuid));
                 }
             }
+            Set<StatPlayer> onlineStatPlayers = Bukkit.getOnlinePlayers().stream().map((Function<Player, StatPlayer>) player -> StatPlayerManager.this.uuidStatMap.get(player.getUniqueId())).collect(Collectors.toSet());
+
             Bukkit.getScheduler().runTaskAsynchronously(getPlugin(), () -> {
                 this.dataManger.saveStatistics(removed, this.getPlugin().getStatisticManager().getPersistentStats());
                 getPlugin().getLogger().info("Cleared " + removed.size() + " cached stat entries");
 
-                Set<StatPlayer> onlineStatPlayers = Bukkit.getOnlinePlayers().stream().map((Function<Player, StatPlayer>) player -> StatPlayerManager.this.uuidStatMap.get(player.getUniqueId())).collect(Collectors.toSet());
                 getPlugin().getLogger().info("Saving stats for online players");
                 this.dataManger.saveStatistics(onlineStatPlayers, this.getPlugin().getStatisticManager().getPersistentStats());
             });
