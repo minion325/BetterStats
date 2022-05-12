@@ -15,6 +15,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class StatPlayerManager extends Manager {
@@ -37,7 +38,6 @@ public class StatPlayerManager extends Manager {
         }
 
         Bukkit.getScheduler().scheduleSyncRepeatingTask(getPlugin(), () -> {
-            getPlugin().getLogger().info("Clearing cached player data");
             Set<StatPlayer> removed = new HashSet<>();
             for (String s : this.nameStatMap.keySet()) {
                 Player player = Bukkit.getPlayer(s);
@@ -50,9 +50,15 @@ public class StatPlayerManager extends Manager {
                     removed.add(this.uuidStatMap.remove(uuid));
                 }
             }
-            this.dataManger.saveStatistics(removed, this.getPlugin().getStatisticManager().getPersistentStats());
-            System.gc();
-            getPlugin().getLogger().info("Cleared " + removed.size() + " cached entries");
+            Bukkit.getScheduler().runTaskAsynchronously(getPlugin(), () -> {
+                this.dataManger.saveStatistics(removed, this.getPlugin().getStatisticManager().getPersistentStats());
+                getPlugin().getLogger().info("Cleared " + removed.size() + " cached stat entries");
+
+                Set<StatPlayer> onlineStatPlayers = Bukkit.getOnlinePlayers().stream().map((Function<Player, StatPlayer>) player -> StatPlayerManager.this.uuidStatMap.get(player.getUniqueId())).collect(Collectors.toSet());
+                getPlugin().getLogger().info("Saving stats for online players");
+                this.dataManger.saveStatistics(onlineStatPlayers, this.getPlugin().getStatisticManager().getPersistentStats());
+            });
+
         }, 1L, getPlugin().getConfig().getInt("cache-clearing-interval") * 20L);
     }
 
