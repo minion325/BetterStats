@@ -6,10 +6,14 @@ import me.saif.betterstats.data.SQLiteDataManager;
 import me.saif.betterstats.hooks.PlaceholderAPIHook;
 import me.saif.betterstats.player.StatPlayerManager;
 import me.saif.betterstats.statistics.StatisticManager;
+import org.bstats.bukkit.Metrics;
+import org.bstats.charts.SimplePie;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class BetterStats extends JavaPlugin {
+
+    private static final int bStatsID = 15173;
 
     private static BetterStatsAPI API;
 
@@ -19,6 +23,8 @@ public final class BetterStats extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        setupMetrics();
+
         API = new BetterStatsAPI(this);
 
         this.saveDefaultConfig();
@@ -42,6 +48,10 @@ public final class BetterStats extends JavaPlugin {
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") == null)
             return;
         new PlaceholderAPIHook().register();
+    }
+
+    private void setupMetrics() {
+        Metrics metrics = new Metrics(this, bStatsID);
     }
 
     @Override
