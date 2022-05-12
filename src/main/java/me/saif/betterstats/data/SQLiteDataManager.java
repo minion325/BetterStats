@@ -165,7 +165,7 @@ public class SQLiteDataManager extends DataManger {
                 Map<Stat, Double> statMap = new HashMap<>();
                 UUID uuid = UUID.fromString(resultSet.getString("UUID"));
                 for (Stat stat : stats) {
-                    statMap.put(stat, resultSet.getDouble(stat.getInternalName()));
+                    statMap.put(stat, resultSet.getObject("column") != null ? resultSet.getDouble("column") : stat.getDefaultValue());
                 }
                 map.put(uuid, statMap);
             }

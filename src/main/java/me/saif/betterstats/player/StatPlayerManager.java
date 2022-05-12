@@ -19,10 +19,10 @@ import java.util.stream.Collectors;
 
 public class StatPlayerManager extends Manager {
 
-    private final Map<String, StatPlayerImpl> nameStatMap = new ConcurrentHashMap<>();
-    private final Map<UUID, StatPlayerImpl> uuidStatMap = new ConcurrentHashMap<>();
-    private final Map<UUID, Callback<StatPlayerImpl>> uuidCallbackMap = new HashMap<>();
-    private final Map<String, Callback<StatPlayerImpl>> nameCallbackMap = new HashMap<>();
+    private final Map<String, StatPlayer> nameStatMap = new ConcurrentHashMap<>();
+    private final Map<UUID, StatPlayer> uuidStatMap = new ConcurrentHashMap<>();
+    private final Map<UUID, Callback<StatPlayer>> uuidCallbackMap = new HashMap<>();
+    private final Map<String, Callback<StatPlayer>> nameCallbackMap = new HashMap<>();
 
     private final DataManger dataManger;
 
@@ -31,7 +31,7 @@ public class StatPlayerManager extends Manager {
         this.dataManger = getPlugin().getDataManger();
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
             dataManger.saveNameAndUUID(onlinePlayer.getName(), onlinePlayer.getUniqueId());
-            StatPlayerImpl statPlayer = getNewStatPlayer(onlinePlayer.getUniqueId());
+            StatPlayer statPlayer = getNewStatPlayer(onlinePlayer.getUniqueId());
             this.nameStatMap.put(onlinePlayer.getName(), statPlayer);
             this.uuidStatMap.put(onlinePlayer.getUniqueId(), statPlayer);
         }
@@ -79,7 +79,7 @@ public class StatPlayerManager extends Manager {
             //data is loaded :D so we just need to check that name is the same
             if (!this.nameStatMap.containsKey(name)) {
                 //name is different
-                StatPlayerImpl statPlayer = this.uuidStatMap.get(uuid);
+                StatPlayer statPlayer = this.uuidStatMap.get(uuid);
                 for (String s : this.nameStatMap.keySet()) {
                     if (this.nameStatMap.get(s).equals(statPlayer)) {
                         this.nameStatMap.remove(s);
@@ -92,7 +92,7 @@ public class StatPlayerManager extends Manager {
 
         Map<Stat, Double> statData = this.dataManger.getStatPlayerDataByUUID(uuid, getPlugin().getStatisticManager().getPersistentStats());
 
-        StatPlayerImpl statPlayer = getNewStatPlayer(uuid);
+        StatPlayer statPlayer = getNewStatPlayer(uuid);
 
         if (statData != null) {
             statData.forEach(statPlayer::setStat);
@@ -103,10 +103,10 @@ public class StatPlayerManager extends Manager {
 
     }
 
-    public Set<StatPlayerImpl> getMultipleStats(UUID... uuids) {
-        Set<StatPlayerImpl> statPlayers = new HashSet<>();
+    public Set<StatPlayer> getMultipleStats(UUID... uuids) {
+        Set<StatPlayer> statPlayers = new HashSet<>();
         for (UUID uuid : uuids) {
-            StatPlayerImpl statPlayer = uuidStatMap.get(uuid);
+            StatPlayer statPlayer = uuidStatMap.get(uuid);
             if (statPlayer != null) statPlayers.add(statPlayer);
         }
         return statPlayers;
@@ -117,7 +117,7 @@ public class StatPlayerManager extends Manager {
         Map<UUID, Map<Stat, Double>> statData = this.dataManger.getStatPlayersDataByUUIDs(this.uuidStatMap.keySet(), Arrays.stream(stats).filter(Stat::isPersistent).collect(Collectors.toList()));
         for (UUID uuid : statData.keySet()) {
             for (Stat stat : stats)
-                uuidStatMap.get(uuid).addStatToMap(stat, stat.getDefaultValue());
+                ((StatPlayer) uuidStatMap.get(uuid)).addStatToMap(stat, stat.getDefaultValue());
             Map<Stat, Double> playerStats = statData.get(uuid);
             playerStats.forEach((stat, aDouble) -> uuidStatMap.get(uuid).setStat(stat, aDouble));
         }
@@ -126,31 +126,31 @@ public class StatPlayerManager extends Manager {
     public void unRegisterStatistics(Stat... stats) {
         if (this.uuidStatMap.size() == 0) return;
         this.dataManger.saveStatistics(new HashSet<>(this.uuidStatMap.values()), Arrays.stream(stats).toList());
-        for (StatPlayerImpl value : this.uuidStatMap.values()) {
+        for (StatPlayer value : this.uuidStatMap.values()) {
             for (Stat stat : stats) {
                 value.removeStatFromMap(stat);
             }
         }
     }
 
-    public StatPlayerImpl getStats(UUID uuid) {
-        Set<StatPlayerImpl> stats = getMultipleStats(uuid);
+    public StatPlayer getStats(UUID uuid) {
+        Set<StatPlayer> stats = getMultipleStats(uuid);
         if (stats.size() == 0) return null;
         return stats.iterator().next();
     }
 
-    private StatPlayerImpl getNewStatPlayer(UUID uuid) {
-        StatPlayerImpl statPlayer = new StatPlayerImpl(uuid);
+    private StatPlayer getNewStatPlayer(UUID uuid) {
+        StatPlayer statPlayer = new StatPlayer(uuid);
         for (Stat registeredStat : this.getPlugin().getStatisticManager().getRegisteredStats()) {
             statPlayer.addStatToMap(registeredStat, registeredStat.getDefaultValue());
         }
         return statPlayer;
     }
 
-    public Callback<StatPlayerImpl> getStatPlayer(UUID uuid) {
+    public Callback<StatPlayer> getStatPlayer(UUID uuid) {
         if (uuidCallbackMap.containsKey(uuid)) return uuidCallbackMap.get(uuid);
 
-        Callback<StatPlayerImpl> callback = new Callback<>(this.getPlugin());
+        Callback<StatPlayer> callback = new Callback<>(this.getPlugin());
 
         if (this.uuidStatMap.containsKey(uuid)) {
             callback.setResult(this.uuidStatMap.get(uuid));
@@ -165,7 +165,7 @@ public class StatPlayerManager extends Manager {
                 return;
             }
 
-            StatPlayerImpl statPlayer = getNewStatPlayer(uuid);
+            StatPlayer statPlayer = getNewStatPlayer(uuid);
             statData.forEach(statPlayer::setStat);
             callback.setResult(statPlayer);
         });
@@ -181,10 +181,10 @@ public class StatPlayerManager extends Manager {
         return callback;
     }
 
-    public Callback<StatPlayerImpl> getStatPlayer(String name) {
+    public Callback<StatPlayer> getStatPlayer(String name) {
         if (nameCallbackMap.containsKey(name)) return nameCallbackMap.get(name);
 
-        Callback<StatPlayerImpl> callback = new Callback<>(this.getPlugin());
+        Callback<StatPlayer> callback = new Callback<>(this.getPlugin());
 
         if (nameStatMap.containsKey(name)) {
             callback.setResult(this.nameStatMap.get(name));
@@ -199,7 +199,7 @@ public class StatPlayerManager extends Manager {
                 return;
             }
 
-            StatPlayerImpl statPlayer = getNewStatPlayer(statData.getFirst());
+            StatPlayer statPlayer = getNewStatPlayer(statData.getFirst());
             statData.getSecond().forEach(statPlayer::setStat);
             callback.setResult(statPlayer);
         });
