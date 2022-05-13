@@ -67,17 +67,6 @@ public class MySQLDataManager extends DataManger {
 
             if (toCreateColumns.size() != 0)
                 statement.executeBatch();
-            statement.clearBatch();
-
-            //setting the default value of all registered stats in the database just incase
-            for (Stat stat : stats) {
-                if (!stat.isPersistent())
-                    continue;
-                String stmt = StringUtils.replace(StringUtils.replace(setDefaults, "%column%", stat.getInternalName()), "%def%", String.valueOf(stat.getDefaultValue()));
-                statement.addBatch(stmt);
-            }
-            statement.executeBatch();
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -167,7 +156,7 @@ public class MySQLDataManager extends DataManger {
                 Map<Stat, Double> statMap = new HashMap<>();
                 UUID uuid = UUID.fromString(resultSet.getString("UUID"));
                 for (Stat stat : stats) {
-                    statMap.put(stat, resultSet.getDouble(stat.getInternalName()));
+                    statMap.put(stat, resultSet.getObject(stat.getInternalName()) != null ? resultSet.getDouble(stat.getInternalName()) : stat.getDefaultValue());
                 }
                 map.put(uuid, statMap);
             }
@@ -211,7 +200,7 @@ public class MySQLDataManager extends DataManger {
                 Map<Stat, Double> statMap = new HashMap<>();
                 UUID uuid = UUID.fromString(resultSet.getString("UUID"));
                 for (Stat stat : stats) {
-                    statMap.put(stat, resultSet.getDouble(stat.getInternalName()));
+                    statMap.put(stat, resultSet.getObject(stat.getInternalName()) != null ? resultSet.getDouble(stat.getInternalName()) : stat.getDefaultValue());
                 }
                 map.put(uuid, statMap);
             }
