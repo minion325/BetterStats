@@ -1,15 +1,24 @@
 package me.saif.betterstats;
 
+import me.saif.betterstats.commands.BetterStatsCommand;
 import me.saif.betterstats.data.DataManger;
 import me.saif.betterstats.data.MySQLDataManager;
 import me.saif.betterstats.data.SQLiteDataManager;
 import me.saif.betterstats.hooks.PlaceholderAPIHook;
 import me.saif.betterstats.player.StatPlayerManager;
+import me.saif.betterstats.statistics.Stat;
 import me.saif.betterstats.statistics.StatisticManager;
 import org.bstats.bukkit.Metrics;
-import org.bstats.charts.SimplePie;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import revxrsal.commands.CommandHandler;
+import revxrsal.commands.bukkit.core.BukkitHandler;
+
+import java.util.Locale;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public final class BetterStats extends JavaPlugin {
 
@@ -41,6 +50,7 @@ public final class BetterStats extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(this.statisticManager, this);
         Bukkit.getPluginManager().registerEvents(this.statPlayerManager, this);
 
+        setupCommands();
         hookPAPI();
     }
 
@@ -52,6 +62,22 @@ public final class BetterStats extends JavaPlugin {
 
     private void setupMetrics() {
         Metrics metrics = new Metrics(this, bStatsID);
+    }
+
+    private void setupCommands() {
+        CommandHandler commandHandler = new BukkitHandler(this)
+                .getAutoCompleter().registerSuggestion("stats", (args, sender, command) -> {
+                    String lastArg = args.get(args.size()-1).toLowerCase(Locale.ROOT);
+                    return BetterStats.getAPI().getRegisteredStats().stream().map(Stat::getInternalName).filter(s -> s.startsWith(lastArg)).collect(Collectors.toList());
+                })
+                .registerSuggestion("players", (args, sender, command) -> {
+                    String last = args.get(args.size() - 1).toLowerCase(Locale.ROOT);
+                    return Bukkit.getOnlinePlayers().stream().map((Function<Player, String>) HumanEntity::getName).filter(s -> s.toLowerCase(Locale.ROOT).startsWith(last)).collect(Collectors.toList());
+                }).and()
+                .register(new BetterStatsCommand());
+
+        ((BukkitHandler) commandHandler).registerBrigadier();
+
     }
 
     @Override
