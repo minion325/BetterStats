@@ -49,10 +49,6 @@ public class StatisticManager extends Manager {
 
         Set<Stat> toRegister = new HashSet<>();
         for (Stat stat : stats) {
-            if (stat instanceof LeaderboardStat && !stat.isPersistent()) {
-                getPlugin().getLogger().severe(stat.getInternalName() + " is a LeaderboardStat but is not persistent");
-                getPlugin().getLogger().warning("Ignoring registration of " + stat.getClass());
-            }
             if (nameStatMap.containsKey(stat.getInternalName())) {
                 getPlugin().getLogger().warning("Already a registered stat with the name: " + stat.getInternalName());
                 getPlugin().getLogger().warning("Ignoring registration of " + stat.getClass());
