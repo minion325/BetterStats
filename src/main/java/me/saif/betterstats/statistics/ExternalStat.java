@@ -6,7 +6,7 @@ public abstract class ExternalStat extends Stat{
 
     @Override
     public final boolean isPersistent() {
-        return false;
+        return this instanceof LeaderboardStat;
     }
 
     public abstract double getValue(OfflinePlayer player);

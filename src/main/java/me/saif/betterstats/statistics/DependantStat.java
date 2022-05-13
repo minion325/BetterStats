@@ -6,7 +6,7 @@ public abstract class DependantStat extends Stat{
 
     @Override
     public boolean isPersistent() {
-        return false;
+        return this instanceof LeaderboardStat;
     }
 
     public abstract double getValue(StatPlayer statPlayer);
