@@ -60,8 +60,8 @@ public class BetterStatsCommand {
             return;
         }
 
-        Callback<StatPlayer> statPlayerCallback = BetterStats.getAPI().getPlayerStats(statString);
-        BetterStats.getAPI().getPlayerStats(statString).addResultListener(() -> {
+        Callback<StatPlayer> statPlayerCallback = BetterStats.getAPI().getPlayerStats(playerName);
+        statPlayerCallback.addResultListener(() -> {
             StatPlayer statPlayer = statPlayerCallback.getResult();
 
             if (statPlayer == null) {
