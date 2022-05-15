@@ -38,6 +38,7 @@ public class BetterStatsCommand {
 
     @Subcommand("parse")
     @AutoComplete("@stats @players")
+    @CommandPermission("betterstats.parse")
     public void parseCommand(BukkitActor actor, String statString, @Optional String playerName) {
         Stat toParse = BetterStats.getAPI().getStat(statString.toLowerCase(Locale.ROOT));
         if (toParse == null) {
