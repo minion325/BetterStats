@@ -9,6 +9,7 @@ import me.saif.betterstats.player.StatPlayerManager;
 import me.saif.betterstats.statistics.Stat;
 import me.saif.betterstats.statistics.StatisticManager;
 import org.bstats.bukkit.Metrics;
+import org.bstats.charts.SimplePie;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
@@ -32,8 +33,6 @@ public final class BetterStats extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        setupMetrics();
-
         API = new BetterStatsAPI(this);
 
         this.saveDefaultConfig();
@@ -52,6 +51,7 @@ public final class BetterStats extends JavaPlugin {
 
         setupCommands();
         hookPAPI();
+        setupMetrics();
     }
 
     private void hookPAPI() {
@@ -62,6 +62,7 @@ public final class BetterStats extends JavaPlugin {
 
     private void setupMetrics() {
         Metrics metrics = new Metrics(this, bStatsID);
+        metrics.addCustomChart(new SimplePie("storage_method", () -> this.dataManger.getType()));
     }
 
     private void setupCommands() {

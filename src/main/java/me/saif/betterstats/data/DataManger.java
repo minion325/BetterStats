@@ -23,6 +23,8 @@ public abstract class DataManger {
         dataTableName = server + "_stats";
     }
 
+    public abstract String getType();
+
     public String getDataTableName() {
         return dataTableName;
     }

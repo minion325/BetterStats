@@ -30,6 +30,11 @@ public class SQLiteDataManager extends DataManger {
     }
 
     @Override
+    public String getType() {
+        return "SQLite";
+    }
+
+    @Override
     public void registerStatistics(Stat... stats) {
         String getColumns = "PRAGMA table_info(" + getDataTableName() + ")";
         try {

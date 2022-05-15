@@ -34,6 +34,11 @@ public class MySQLDataManager extends DataManger {
     }
 
     @Override
+    public String getType() {
+        return "MySQL";
+    }
+
+    @Override
     public void registerStatistics(Stat... stats) {
         String getColumns = "SELECT COLUMN_NAME FROM information_schema.COLUMNS where TABLE_SCHEMA = '" + database.getDatabaseName() + "' AND TABLE_NAME = '" + getDataTableName() + "'";
         try (Connection connection = database.getConnection();
