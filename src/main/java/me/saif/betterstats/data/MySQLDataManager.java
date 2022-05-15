@@ -39,8 +39,7 @@ public class MySQLDataManager extends DataManger {
         try (Connection connection = database.getConnection();
              Statement statement = connection.createStatement()) {
 
-            String createColumns = "ALTER TABLE " + getDataTableName() + " ADD %column% REAL;";
-            String setDefaults = "ALTER TABLE " + getDataTableName() + " ALTER COLUMN %column% SET DEFAULT %def%;";
+            String createColumns = "ALTER TABLE " + getDataTableName() + " ADD %column% REAL NOT NULL DEFAULT 0;";
             //getting the current columns in the table
             ResultSet set = statement.executeQuery(getColumns);
             Set<String> columns = new HashSet<>();

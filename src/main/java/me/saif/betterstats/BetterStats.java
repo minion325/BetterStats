@@ -39,9 +39,9 @@ public final class BetterStats extends JavaPlugin {
         this.saveDefaultConfig();
 
         if (getConfig().getBoolean("sql.mysql", false))
-            this.dataManger = new MySQLDataManager(this, getConfig().getString("server_name", "minecraft_server"));
+            this.dataManger = new MySQLDataManager(this, getConfig().getString("server-name", "minecraft_server"));
         else {
-            this.dataManger = new SQLiteDataManager(this, getConfig().getString("server_name", "minecraft_server"));
+            this.dataManger = new SQLiteDataManager(this, getConfig().getString("server-name", "minecraft_server"));
         }
 
         this.statisticManager = new StatisticManager(this);
