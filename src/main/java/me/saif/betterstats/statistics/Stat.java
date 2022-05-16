@@ -12,9 +12,11 @@ public abstract class Stat {
 
     public abstract double getDefaultValue();
 
-    public abstract String format(double value);
+    public final boolean isPersistent() {
+        return (this instanceof LeaderboardStat || (!(this instanceof DependantStat) && !(this instanceof ExternalStat)));
+    }
 
-    public abstract boolean isPersistent();
+    public abstract String format(double value);
 
     public void onRegister(){}
 

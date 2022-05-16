@@ -9,11 +9,13 @@ import org.bukkit.OfflinePlayer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class StatPlayer {
 
     private final UUID uuid;
     private final Map<Stat, Double> statMap = new HashMap<>();
+    private final Map<Stat, Double> initialMap = new ConcurrentHashMap<>();
     protected StatPlayer(UUID uuid) {
         this.uuid = uuid;
     }

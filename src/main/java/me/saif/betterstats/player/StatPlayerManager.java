@@ -2,6 +2,9 @@ package me.saif.betterstats.player;
 
 import me.saif.betterstats.BetterStats;
 import me.saif.betterstats.data.DataManger;
+import me.saif.betterstats.statistics.DependantStat;
+import me.saif.betterstats.statistics.ExternalStat;
+import me.saif.betterstats.statistics.LeaderboardStat;
 import me.saif.betterstats.statistics.Stat;
 import me.saif.betterstats.utils.Callback;
 import me.saif.betterstats.utils.Manager;

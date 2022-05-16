@@ -30,6 +30,7 @@ public final class BetterStats extends JavaPlugin {
     private StatisticManager statisticManager;
     private StatPlayerManager statPlayerManager;
     private DataManger dataManger;
+    private boolean multiServer = false;
 
     @Override
     public void onEnable() {
@@ -100,5 +101,9 @@ public final class BetterStats extends JavaPlugin {
 
     public DataManger getDataManger() {
         return dataManger;
+    }
+
+    public boolean isMultiServer() {
+        return multiServer;
     }
 }
