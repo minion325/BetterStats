@@ -11,8 +11,6 @@ public abstract class ExternalStat extends Stat{
 
     public abstract double getValue(OfflinePlayer player);
 
-    public abstract void setValue(OfflinePlayer player, double value);
-
     @Override
     public double getDefaultValue() {
         return 0;

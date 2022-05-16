@@ -41,8 +41,7 @@ public class StatPlayer {
         if (stat instanceof DependantStat)
             throw new UnsupportedOperationException("Cannot set " + stat.getName());
         if (stat instanceof ExternalStat) {
-            ((ExternalStat) stat).setValue(Bukkit.getOfflinePlayer(uuid), value);
-            return;
+            throw new UnsupportedOperationException("Cannot set " + stat.getName());
         }
         this.statMap.replace(stat, value);
     }
