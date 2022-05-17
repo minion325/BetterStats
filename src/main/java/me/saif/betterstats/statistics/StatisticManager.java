@@ -13,7 +13,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-public class StatisticManager extends Manager {
+public class StatisticManager extends Manager<BetterStats> {
 
     private final Map<Class<? extends Stat>, Stat> classStatMap = new ConcurrentHashMap<>();
     private final Map<String, Stat> nameStatMap = new ConcurrentHashMap<>();
@@ -128,6 +128,18 @@ public class StatisticManager extends Manager {
 
     public List<Stat> getPersistentStats() {
         return stats.stream().filter(Stat::isPersistent).collect(Collectors.toList());
+    }
+
+    public List<Stat> getExternalStats() {
+        return stats.stream().filter(stat -> stat instanceof OfflineExternalStat).collect(Collectors.toList());
+    }
+
+    public List<Stat> getDependantStats() {
+        return stats.stream().filter(stat -> stat instanceof DependantStat).collect(Collectors.toList());
+    }
+
+    public List<Stat> getLeaderboardStats() {
+        return stats.stream().filter(stat -> stat instanceof LeaderboardStat).collect(Collectors.toList());
     }
 
     public List<Stat> getStatsForPlugin(JavaPlugin plugin) {

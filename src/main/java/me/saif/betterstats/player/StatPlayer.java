@@ -1,8 +1,6 @@
 package me.saif.betterstats.player;
 
-import me.saif.betterstats.statistics.DependantStat;
-import me.saif.betterstats.statistics.ExternalStat;
-import me.saif.betterstats.statistics.Stat;
+import me.saif.betterstats.statistics.*;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
@@ -13,65 +11,92 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class StatPlayer {
 
-    private final UUID uuid;
-    private final Map<Stat, Double> statMap = new HashMap<>();
-    private final Map<Stat, Double> initialMap = new ConcurrentHashMap<>();
-    protected StatPlayer(UUID uuid) {
+    private UUID uuid;
+    private String name;
+
+    //this map contains all the stats
+    private Map<Stat, Double> baseValues = new ConcurrentHashMap<>();
+
+    //this map should contain normal stat types
+    private Map<Stat, Double> upToDateValues = new HashMap<>();
+
+    protected StatPlayer(UUID uuid, String name) {
         this.uuid = uuid;
+        this.name = name;
     }
 
-    protected void addStatToMap (Stat stat, Double value) {
-        if (stat instanceof ExternalStat) {
-            this.statMap.put(stat, null);
-        }
-        if (stat instanceof DependantStat) {
-            this.statMap.put(stat, null);
-        }
+    protected void addStatToMap(Stat stat, double value) {
+        if (stat instanceof DependantStat || stat instanceof OfflineExternalStat)
+            baseValues.put(stat, null);
+        else if (stat instanceof OnlineExternalStat)
+            baseValues.put(stat, value);
         else {
-            this.statMap.put(stat, value);
+            baseValues.put(stat, value);
+            upToDateValues.put(stat, value);
         }
     }
 
     protected void removeStatFromMap(Stat stat) {
-        this.statMap.remove(stat);
+        baseValues.remove(stat);
+        upToDateValues.remove(stat);
     }
 
-    public void setStat(Stat stat, double value) {
-        if (!this.statMap.containsKey(stat))
-            throw new UnsupportedOperationException("Cannot set a statistic that is not registered");
+    protected Map<Stat, Double> getChanges() {
+        Map<Stat, Double> changesMap = new HashMap<>();
+        this.upToDateValues.forEach((stat, aDouble) -> changesMap.put(stat, aDouble - baseValues.get(stat)));
+        return changesMap;
+    }
 
-        if (stat instanceof DependantStat)
-            throw new UnsupportedOperationException("Cannot set " + stat.getName());
-        if (stat instanceof ExternalStat) {
-            throw new UnsupportedOperationException("Cannot set " + stat.getName());
+    protected void flushChanges() {
+        this.upToDateValues.forEach((stat, aDouble) -> this.baseValues.replace(stat, aDouble));
+    }
+
+    protected void setBaseValue(Stat stat, double value) {
+        if (stat instanceof DependantStat || stat instanceof OfflineExternalStat)
+            baseValues.put(stat, null);
+        baseValues.put(stat, value);
+    }
+
+    protected void addChanges(Map<Stat, Double> changes) {
+        for (Stat stat : changes.keySet()) {
+            baseValues.computeIfPresent(stat, (statistic, aDouble) -> aDouble + changes.get(statistic));
         }
-        this.statMap.replace(stat, value);
     }
 
     public double getStat(Stat stat) {
-        if (!statMap.containsKey(stat))
-            throw new UnsupportedOperationException("Cannot get a statistic that is not registered");
-        if (stat instanceof ExternalStat)
-            return ((ExternalStat) stat).getValue(Bukkit.getOfflinePlayer(uuid));
+        checkMapForStat(stat);
+
+        if (stat instanceof OnlineExternalStat)
+            if (Bukkit.getPlayer(getUuid()) != null) {
+                double value = ((OnlineExternalStat) stat).getValue(Bukkit.getPlayer(getUuid()));
+                this.baseValues.replace(stat, value);
+                return value;
+            } else
+                return baseValues.get(stat);
+        if (stat instanceof OfflineExternalStat)
+            return ((OfflineExternalStat) stat).getValue(getPlayer());
         if (stat instanceof DependantStat)
             return ((DependantStat) stat).getValue(this);
-        return statMap.get(stat);
+        return upToDateValues.get(stat);
     }
 
-    public String getFormattedStat(Stat stat) {
-        return stat.format(this.getStat(stat));
+    public void setStat(Stat stat, double value) {
+        checkMapForStat(stat);
+        checkIfModifiable(stat);
+
+        this.upToDateValues.replace(stat, value);
     }
 
-    public void addToStat(Stat stat, double amount) {
-        this.setStat(stat, this.getStat(stat) + amount);
+    public void addToStat(Stat stat, double value) {
+        setStat(stat, getStat(stat) + value);
     }
 
-    public void removeFromStat(Stat stat, double amount) {
-        this.setStat(stat, this.getStat(stat) - amount);
+    public void removeFromStat(Stat stat, double value) {
+        setStat(stat, getStat(stat) - value);
     }
 
-    public void resetStat(Stat stat) {
-        this.setStat(stat, stat.getDefaultValue());
+    public String getName() {
+        return name;
     }
 
     public UUID getUuid() {
@@ -80,5 +105,15 @@ public class StatPlayer {
 
     public OfflinePlayer getPlayer() {
         return Bukkit.getOfflinePlayer(uuid);
+    }
+
+    private void checkMapForStat(Stat stat) {
+        if (!baseValues.containsKey(stat))
+            throw new UnsupportedOperationException("Cannot access a statistic that is not registered");
+    }
+
+    private void checkIfModifiable(Stat stat) {
+        if (stat instanceof UnmodifiableStat)
+            throw new UnsupportedOperationException("Cannot set unmodifiable stats");
     }
 }

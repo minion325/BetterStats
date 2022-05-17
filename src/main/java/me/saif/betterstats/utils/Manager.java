@@ -1,18 +1,18 @@
 package me.saif.betterstats.utils;
 
-import me.saif.betterstats.BetterStats;
 import org.bukkit.event.Listener;
+import org.bukkit.plugin.java.JavaPlugin;
 
-public class Manager implements Listener {
+public class Manager<T extends JavaPlugin> implements Listener {
 
-    private final BetterStats gcStats;
+    private final T plugin;
 
-    public Manager(BetterStats stats) {
-        this.gcStats = stats;
+    public Manager(T plugin) {
+        this.plugin = plugin;
     }
 
-    public BetterStats getPlugin() {
-        return gcStats;
+    public T getPlugin() {
+        return plugin;
     }
 
 }

@@ -1,33 +1,26 @@
 package me.saif.betterstats.utils;
 
-import org.bukkit.Bukkit;
-import org.bukkit.plugin.java.JavaPlugin;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class Callback<T> {
 
     private final List<Runnable> runnables = new ArrayList<>();
-    private final JavaPlugin plugin;
     private T result;
     private boolean results = false;
-
-    public Callback(JavaPlugin plugin) {
-        this.plugin = plugin;
-    }
 
     public synchronized void addResultListener(Runnable runnable) {
         if (!this.hasResults())
             this.runnables.add(runnable);
         else {
-            if (Bukkit.isPrimaryThread())
-                runnable.run();
-            else
-                Bukkit.getScheduler().scheduleSyncDelayedTask(this.plugin, runnable);
+            runnable.run();
         }
     }
 
+    /**
+     *  Ideally this method should be called from the main thread.
+     * @param result Result that is being proviaded to the callback.
+     */
     public synchronized void setResult(T result) {
         if (this.hasResults())
             throw new IllegalStateException("Callback already has a result");
@@ -37,12 +30,10 @@ public class Callback<T> {
         if (this.runnables.size() == 0)
             return;
 
-        Bukkit.getScheduler().scheduleSyncDelayedTask(this.plugin, () -> {
-            for (Runnable runnable : this.runnables) {
-                runnable.run();
-            }
-            this.runnables.clear();
-        });
+        for (Runnable runnable : this.runnables) {
+            runnable.run();
+        }
+        this.runnables.clear();
     }
 
     public synchronized boolean hasResults() {

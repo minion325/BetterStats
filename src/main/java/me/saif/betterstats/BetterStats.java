@@ -2,7 +2,6 @@ package me.saif.betterstats;
 
 import me.saif.betterstats.commands.BetterStatsCommand;
 import me.saif.betterstats.data.DataManger;
-import me.saif.betterstats.data.MySQLDataManager;
 import me.saif.betterstats.data.SQLiteDataManager;
 import me.saif.betterstats.hooks.PlaceholderAPIHook;
 import me.saif.betterstats.player.StatPlayerManager;
@@ -38,11 +37,11 @@ public final class BetterStats extends JavaPlugin {
 
         this.saveDefaultConfig();
 
-        if (getConfig().getBoolean("sql.mysql", false))
-            this.dataManger = new MySQLDataManager(this, getConfig().getString("server-name", "minecraft_server"));
-        else {
+        //if (getConfig().getBoolean("sql.mysql", false))
+        //    this.dataManger = new MySQLDataManager(this, getConfig().getString("server-name", "minecraft_server"));
+        //else {
             this.dataManger = new SQLiteDataManager(this, getConfig().getString("server-name", "minecraft_server"));
-        }
+        //}
 
         this.statisticManager = new StatisticManager(this);
         this.statPlayerManager = new StatPlayerManager(this);
