@@ -3,12 +3,13 @@ package me.saif.betterstats.data;
 import me.saif.betterstats.BetterStats;
 import me.saif.betterstats.data.database.Database;
 import me.saif.betterstats.data.database.SQLiteDatabase;
-import me.saif.betterstats.statistics.DependantStat;
-import me.saif.betterstats.statistics.OfflineExternalStat;
-import me.saif.betterstats.statistics.OnlineExternalStat;
-import me.saif.betterstats.statistics.Stat;
+import me.saif.betterstats.statistics.*;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.inventory.AnvilInventory;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -114,30 +115,157 @@ public class SQLiteDataManager extends DataManger {
     }
 
     @Override
-    public void saveStatsMultiple(Map<UUID, Map<Stat, Double>> statsMap) {
+    public void saveStatChangesMultiple(Map<UUID, Map<Stat, Double>> statsMap) {
         if (statsMap.size() == 0)
             return;
         try {
             Connection connection = database.getConnection();
             Statement statement = connection.createStatement();
+            for (UUID uuid : statsMap.keySet()) {
+                Map<Stat, Double> statDoubleMap = statsMap.get(uuid);
+                if (statDoubleMap.size() == 0)
+                    continue;
+                StringBuilder columns = new StringBuilder("(UUID,");
+                StringBuilder values = new StringBuilder("(?,");
+
+                statDoubleMap.forEach((stat, aDouble) -> {
+                    if (!stat.isPersistent())
+                        return;
+                    columns.append(stat.getInternalName());
+                    values.append(aDouble);
+                    columns.append(",");
+                    values.append(",");
+                });
+
+                statement.addBatch("REPLACE INTO " + getDataTableName() + " " + columns + " VALUES " + values + ";");
+            }
+            statement.executeBatch();
+        } catch (
+                SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    @Override
+    public void forceSetStatsMultiple(Map<UUID, Map<Stat, Double>> statsMap) {
+        if (statsMap.size() == 0)
+            return;
+        try {
+            Connection connection = database.getConnection();
+            Statement statement = connection.createStatement();
+            for (UUID uuid : statsMap.keySet()) {
+                Map<Stat, Double> statDoubleMap = statsMap.get(uuid);
+                StringBuilder sql = new StringBuilder("");
+                statDoubleMap.forEach((stat, aDouble) -> {
+                    if (!stat.isPersistent())
+                        return;
+                    if (stat instanceof DependantStat || stat instanceof OfflineExternalStat || stat instanceof OnlineExternalStat)
+                        sql.append(stat.getInternalName()).append("=").append(aDouble);
+                    else
+                        sql.append(stat.getInternalName()).append("=").append(stat.getInternalName()).append("+").append(aDouble);
+                    sql.append(',');
+                });
+                if (sql.toString().equals(""))
+                    continue;
+                sql.deleteCharAt(sql.length() - 1);
+                statement.addBatch("UPDATE " + getDataTableName() + " SET " + sql +
+                        " WHERE UUID = '" + uuid + "';");
+            }
+            statement.executeBatch();
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
     @Override
-    public void forceSetStatsMultiple(Map<UUID, Map<Stat, Double>> statsMap) {
-
-    }
-
-    @Override
     public Map<UUID, Map<Stat, Double>> getStatsFromUUIDMultiple(Collection<UUID> uuids, List<Stat> stats) {
-        return null;
+        stats = stats.stream().filter(Stat::isPersistent).collect(Collectors.toList());
+        StringBuilder sql = new StringBuilder("SELECT " + getColumns(stats) + " FROM " + getDataTableName() + " WHERE ");
+        Iterator<UUID> uuidIterator = uuids.iterator();
+
+        while (uuidIterator.hasNext()) {
+            UUID uuid = uuidIterator.next();
+
+            sql.append("UUID ='").append(uuid.toString()).append('\'');
+            if (!uuidIterator.hasNext())
+                sql.append(";");
+            else
+                sql.append(" OR ");
+
+        }
+
+        Map<UUID, Map<Stat, Double>> map = new HashMap<>();
+        try {
+            Connection connection = database.getConnection();
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(sql.toString());
+
+            while (resultSet.next()) {
+                Map<Stat, Double> statMap = new HashMap<>();
+                UUID uuid = UUID.fromString(resultSet.getString("UUID"));
+                for (Stat stat : stats) {
+                    statMap.put(stat, resultSet.getObject(stat.getInternalName()) != null ? resultSet.getDouble(stat.getInternalName()) : null);
+                }
+                map.put(uuid, statMap);
+            }
+
+            statement.close();
+            return map;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override
     public Map<UUID, Map<Stat, Double>> getStatsFromNameMultiple(Collection<String> names, List<Stat> stats) {
-        return null;
+        stats = stats.stream().filter(Stat::isPersistent).collect(Collectors.toList());
+        StringBuilder sql = new StringBuilder("SELECT " + getColumns(stats) + " FROM " + getDataTableName() + " WHERE ");
+        Iterator<String> nameIterator = names.iterator();
+
+        while (nameIterator.hasNext()) {
+            String name = nameIterator.next();
+
+            sql.append("UUID =").append("(SELECT UUID FROM ").append(getPlayersTableName()).append(" WHERE NAME ='").append(name).append("' LIMIT 1)");
+            if (!nameIterator.hasNext())
+                sql.append(";");
+            else
+                sql.append(" OR ");
+
+        }
+        Map<UUID, Map<Stat, Double>> map = new HashMap<>();
+        try {
+            Connection connection = database.getConnection();
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(sql.toString());
+
+            while (resultSet.next()) {
+                Map<Stat, Double> statMap = new HashMap<>();
+                UUID uuid = UUID.fromString(resultSet.getString("UUID"));
+                for (Stat stat : stats) {
+                    statMap.put(stat, resultSet.getObject(stat.getInternalName()) != null ? resultSet.getDouble(stat.getInternalName()) : null);
+                }
+                map.put(uuid, statMap);
+            }
+            statement.close();
+            return map;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private String getColumns(List<Stat> stats) {
+        StringBuilder columns = new StringBuilder("UUID,");
+        for (int i = 0; i < stats.size(); i++) {
+            columns.append(stats.get(i).getInternalName());
+            if (i == stats.size() - 1)
+                return columns.toString();
+            else
+                columns.append(",");
+        }
+        return "*";
     }
 
     /*private String getSaveStatsQuery(List<Stat> stats) {

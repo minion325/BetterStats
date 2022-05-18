@@ -51,6 +51,13 @@ public class StatPlayer {
         this.upToDateValues.forEach((stat, aDouble) -> this.baseValues.replace(stat, aDouble));
     }
 
+    protected void flushChanges(Stat... stats) {
+        for (Stat stat : stats) {
+            if (this.upToDateValues.containsKey(stat))
+                this.baseValues.replace(stat, this.upToDateValues.get(stat));
+        }
+    }
+
     protected void setBaseValue(Stat stat, double value) {
         if (stat instanceof DependantStat || stat instanceof OfflineExternalStat)
             baseValues.put(stat, null);
@@ -85,6 +92,10 @@ public class StatPlayer {
         checkIfModifiable(stat);
 
         this.upToDateValues.replace(stat, value);
+    }
+
+    public String getFormattedStat(Stat stat) {
+        return stat.format(getStat(stat));
     }
 
     public void addToStat(Stat stat, double value) {

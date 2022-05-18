@@ -45,13 +45,13 @@ public abstract class DataManger {
 
     public abstract void finishUp();
 
-    public void saveStats(UUID uuid, Map<Stat, Double> stats) {
+    public void saveStatChanges(UUID uuid, Map<Stat, Double> stats) {
         Map<UUID, Map<Stat, Double>> statsMap = new HashMap<>();
         statsMap.put(uuid, stats);
-        saveStatsMultiple(statsMap);
+        saveStatChangesMultiple(statsMap);
     }
 
-    public abstract void saveStatsMultiple(Map<UUID, Map<Stat, Double>> statsMap);
+    public abstract void saveStatChangesMultiple(Map<UUID, Map<Stat, Double>> statsMap);
 
     public void forceSetStats(UUID uuid, Map<Stat, Double> stats) {
         Map<UUID, Map<Stat, Double>> statsMap = new HashMap<>();
@@ -61,8 +61,11 @@ public abstract class DataManger {
 
     public abstract void forceSetStatsMultiple(Map<UUID, Map<Stat, Double>> statsMap);
 
-    public Pair<UUID, Map<Stat, Double>> getStatsFromUUID(UUID uuid, List<Stat> stats) {
-        return Pair.fromMap(getStatsFromUUIDMultiple(Collections.singleton(uuid), stats));
+    public Map<Stat, Double> getStatsFromUUID(UUID uuid, List<Stat> stats) {
+        Map<UUID, Map<Stat, Double>> map = getStatsFromUUIDMultiple(Collections.singleton(uuid), stats);
+        if (map.containsKey(uuid))
+            return map.get(uuid);
+        else return new HashMap<>();
     }
 
     public abstract Map<UUID, Map<Stat, Double>> getStatsFromUUIDMultiple(Collection<UUID> uuids, List<Stat> stats);

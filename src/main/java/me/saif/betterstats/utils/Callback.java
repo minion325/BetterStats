@@ -1,5 +1,7 @@
 package me.saif.betterstats.utils;
 
+import org.checkerframework.checker.units.qual.C;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,7 +11,7 @@ public class Callback<T> {
     private T result;
     private boolean results = false;
 
-    public synchronized void addResultListener(Runnable runnable) {
+    public void addResultListener(Runnable runnable) {
         if (!this.hasResults())
             this.runnables.add(runnable);
         else {
@@ -18,10 +20,11 @@ public class Callback<T> {
     }
 
     /**
-     *  Ideally this method should be called from the main thread.
+     * Ideally this method should be called from the main thread.
+     *
      * @param result Result that is being proviaded to the callback.
      */
-    public synchronized void setResult(T result) {
+    public void setResult(T result) {
         if (this.hasResults())
             throw new IllegalStateException("Callback already has a result");
         this.result = result;
@@ -36,7 +39,7 @@ public class Callback<T> {
         this.runnables.clear();
     }
 
-    public synchronized boolean hasResults() {
+    public boolean hasResults() {
         return this.results;
     }
 
@@ -44,7 +47,14 @@ public class Callback<T> {
         return result;
     }
 
+    public static<T>Callback<T> withResult(T result){
+        Callback<T> callback = new Callback<>();
+        callback.setResult(result);
+        return callback;
+    }
+
     @Override
+
     public String toString() {
         return "Callback{" +
                 ", result=" + result +
