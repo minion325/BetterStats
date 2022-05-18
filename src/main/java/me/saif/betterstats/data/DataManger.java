@@ -1,6 +1,7 @@
 package me.saif.betterstats.data;
 
 import me.saif.betterstats.BetterStats;
+import me.saif.betterstats.player.StatPlayerSnapshot;
 import me.saif.betterstats.statistics.Stat;
 import me.saif.betterstats.utils.Pair;
 
@@ -45,13 +46,19 @@ public abstract class DataManger {
 
     public abstract void finishUp();
 
-    public void saveStatChanges(UUID uuid, Map<Stat, Double> stats) {
-        Map<UUID, Map<Stat, Double>> statsMap = new HashMap<>();
-        statsMap.put(uuid, stats);
-        saveStatChangesMultiple(statsMap);
+    public void saveStatChanges(UUID uuid, StatPlayerSnapshot snapshot, List<Stat> stats) {
+        Map<UUID, StatPlayerSnapshot> statsMap = new HashMap<>();
+        statsMap.put(uuid, snapshot);
+        saveStatChangesMultiple(statsMap, stats);
     }
 
-    public abstract void saveStatChangesMultiple(Map<UUID, Map<Stat, Double>> statsMap);
+    /**
+     *
+     * @param statsMap Map with statplayersnapshots to be saved to the database. For regular stats, changes are saved
+     *                 Other stat types, the actual values are saved.
+     * @param stats The stats to be saved.
+     */
+    public abstract void saveStatChangesMultiple(Map<UUID, StatPlayerSnapshot> statsMap, List<Stat> stats);
 
     public void forceSetStats(UUID uuid, Map<Stat, Double> stats) {
         Map<UUID, Map<Stat, Double>> statsMap = new HashMap<>();
@@ -59,16 +66,18 @@ public abstract class DataManger {
         forceSetStatsMultiple(statsMap);
     }
 
+    /**
+     *
+     * @param statsMap Map with values with will be pushed to the database
+     */
     public abstract void forceSetStatsMultiple(Map<UUID, Map<Stat, Double>> statsMap);
 
-    public Map<Stat, Double> getStatsFromUUID(UUID uuid, List<Stat> stats) {
-        Map<UUID, Map<Stat, Double>> map = getStatsFromUUIDMultiple(Collections.singleton(uuid), stats);
-        if (map.containsKey(uuid))
-            return map.get(uuid);
-        else return new HashMap<>();
+    public Pair<String, Map<Stat, Double>> getStatsFromUUID(UUID uuid, List<Stat> stats) {
+        Map<UUID, Pair<String, Map<Stat, Double>>> map = getStatsFromUUIDMultiple(Collections.singleton(uuid), stats);
+        return map.getOrDefault(uuid, null);
     }
 
-    public abstract Map<UUID, Map<Stat, Double>> getStatsFromUUIDMultiple(Collection<UUID> uuids, List<Stat> stats);
+    public abstract Map<UUID, Pair<String, Map<Stat, Double>>> getStatsFromUUIDMultiple(Collection<UUID> uuids, List<Stat> stats);
 
     public Pair<UUID, Map<Stat, Double>> getStatsFromName(String name, List<Stat> stats) {
         return Pair.fromMap(getStatsFromNameMultiple(Collections.singleton(name), stats));

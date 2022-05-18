@@ -2,7 +2,7 @@ package me.saif.betterstats.data;
 
 import me.saif.betterstats.BetterStats;
 import me.saif.betterstats.data.database.Database;
-import me.saif.betterstats.data.database.SQLiteDatabase;
+import me.saif.betterstats.data.database.MySQLDatabase;
 import me.saif.betterstats.player.StatPlayerSnapshot;
 import me.saif.betterstats.statistics.DependantStat;
 import me.saif.betterstats.statistics.OfflineExternalStat;
@@ -12,55 +12,57 @@ import me.saif.betterstats.utils.Pair;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 
-import java.io.File;
-import java.io.IOException;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class SQLiteDataManager extends DataManger {
+public class MySQLDataManager extends DataManger {
 
     private Database database;
 
-    public SQLiteDataManager(BetterStats plugin, String server) {
+    public MySQLDataManager(BetterStats plugin, String server) {
         super(plugin, server);
         try {
-            this.database = new SQLiteDatabase(new File(plugin.getDataFolder(), "data.db"));
-        } catch (IOException e) {
+            this.database = new MySQLDatabase(
+                    plugin.getConfig().getString("sql.host"),
+                    plugin.getConfig().getInt("sql.port"),
+                    plugin.getConfig().getString("sql.username"),
+                    plugin.getConfig().getString("sql.password"),
+                    plugin.getConfig().getString("sql.database"));
+        } catch (Exception e) {
             e.printStackTrace();
-            plugin.getLogger().severe("Could not load the database properly. Shutting down...");
+            plugin.getLogger().severe("Could not connect to the database properly. Please check the config and reload the plugin.");
             Bukkit.getPluginManager().disablePlugin(this.getPlugin());
         }
     }
 
     @Override
     public String getType() {
-        return "SQLite";
+        return "MYSQL";
     }
 
     @Override
     public void registerStatistics(Stat... stats) {
-        String getColumns = "PRAGMA table_info(" + getDataTableName() + ")";
-        try (Statement statement = database.getConnection().createStatement();) {
+        String getColumns = "SELECT COLUMN_NAME FROM information_schema.COLUMNS where TABLE_SCHEMA = '" + database.getDatabaseName() + "' AND TABLE_NAME = '" + getDataTableName() + "'";
+        try (Connection connection = database.getConnection();
+             Statement statement = connection.createStatement()) {
 
-
-            String createColumns = "ALTER TABLE " + getDataTableName() + " ADD %column% REAL;";
+            String createColumns = "ALTER TABLE " + getDataTableName() + " ADD %column% REAL NOT NULL DEFAULT 0;";
             //getting the current columns in the table
             ResultSet set = statement.executeQuery(getColumns);
             Set<String> columns = new HashSet<>();
             while (set.next()) {
-                columns.add(set.getString("NAME"));
+                columns.add(set.getString("COLUMN_NAME"));
             }
 
             //figuring which columns need to be created
             Set<String> toCreateColumns = new HashSet<>();
             for (Stat stat : stats) {
-                if (!stat.isPersistent()) continue;
+                if (!stat.isPersistent())
+                    continue;
 
-                if (columns.contains(stat.getInternalName())) continue;
+                if (columns.contains(stat.getInternalName()))
+                    continue;
 
                 toCreateColumns.add(stat.getInternalName());
             }
@@ -70,8 +72,8 @@ public class SQLiteDataManager extends DataManger {
                 statement.addBatch(StringUtils.replace(createColumns, "%column%", column));
             }
 
-            if (toCreateColumns.size() != 0) statement.executeBatch();
-
+            if (toCreateColumns.size() != 0)
+                statement.executeBatch();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -81,7 +83,8 @@ public class SQLiteDataManager extends DataManger {
     public void createTables() {
         String createDataTable = "CREATE TABLE IF NOT EXISTS " + getDataTableName() + " (UUID VARCHAR(36) NOT NULL PRIMARY KEY);";
         String createNameUUIDTable = "CREATE TABLE IF NOT EXISTS " + getPlayersTableName() + " (UUID VARCHAR(36) NOT NULL UNIQUE, NAME VARCHAR(16) NOT NULL UNIQUE);";
-        try (Statement statement = database.getConnection().createStatement()) {
+        try (Connection connection = database.getConnection();
+             Statement statement = connection.createStatement()) {
 
             statement.executeUpdate(createDataTable);
             statement.executeUpdate(createNameUUIDTable);
@@ -93,7 +96,8 @@ public class SQLiteDataManager extends DataManger {
     @Override
     public void saveNameAndUUID(String name, UUID uuid) {
         String sql = "REPLACE INTO " + getPlayersTableName() + " (UUID,NAME) VALUES (?, ?)";
-        try (PreparedStatement statement = database.getConnection().prepareStatement(sql);) {
+        try (Connection connection = database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setString(1, uuid.toString());
             statement.setString(2, name);
@@ -111,7 +115,8 @@ public class SQLiteDataManager extends DataManger {
     @Override
     public void forceSetStatsMultiple(Map<UUID, Map<Stat, Double>> statsMap) {
         if (statsMap.size() == 0) return;
-        try (Statement statement = database.getConnection().createStatement();) {
+        try (Connection connection = database.getConnection();
+             Statement statement = connection.createStatement()) {
 
             for (UUID uuid : statsMap.keySet()) {
                 Map<Stat, Double> statDoubleMap = statsMap.get(uuid);
@@ -143,7 +148,8 @@ public class SQLiteDataManager extends DataManger {
     public void saveStatChangesMultiple(Map<UUID, StatPlayerSnapshot> statsMap, List<Stat> stats) {
         stats = stats.stream().filter(Stat::isPersistent).collect(Collectors.toList());
         if (statsMap.size() == 0 || stats.size() == 0) return;
-        try (PreparedStatement statement = database.getConnection().prepareStatement(createSavingStatement(stats))) {
+        try (Connection connection = database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(createSavingStatement(stats))) {
 
             for (UUID uuid : statsMap.keySet()) {
                 for (int i = 1; i <= stats.size(); i++) {
@@ -193,7 +199,8 @@ public class SQLiteDataManager extends DataManger {
         }
 
         Map<UUID, Pair<String, Map<Stat, Double>>> map = new HashMap<>();
-        try (Statement statement = database.getConnection().createStatement();) {
+        try (Connection connection = database.getConnection();
+             Statement statement = connection.createStatement()) {
             ResultSet resultSet = statement.executeQuery(sql.toString());
 
             while (resultSet.next()) {
@@ -229,7 +236,8 @@ public class SQLiteDataManager extends DataManger {
 
         }
         Map<UUID, Map<Stat, Double>> map = new HashMap<>();
-        try (Statement statement = database.getConnection().createStatement();) {
+        try (Connection connection = database.getConnection();
+             Statement statement = connection.createStatement()) {
 
             ResultSet resultSet = statement.executeQuery(sql.toString());
 
@@ -258,20 +266,4 @@ public class SQLiteDataManager extends DataManger {
         }
         return "*";
     }
-
-    /*private String getSaveStatsQuery(List<Stat> stats) {
-        StringBuilder updateString = new StringBuilder();
-        for (int i = 0; i < stats.size(); i++) {
-            Stat stat = stats.get(i);
-            if (stat instanceof DependantStat || stat instanceof OfflineExternalStat || stat instanceof OnlineExternalStat)
-                updateString.append(stat.getInternalName()).append("=? ");
-            else
-                updateString.append(stat.getInternalName()).append("=").append(stat.getInternalName()).append("+? ");
-            if (i != stats.size() - 1)
-                updateString.append(",");
-        }
-        if (updateString.toString().equals(""))
-            return null;
-        return "UPDATE " + getDataTableName() + " SET " + updateString.toString() + " WHERE UUID = ?";
-    }*/
 }

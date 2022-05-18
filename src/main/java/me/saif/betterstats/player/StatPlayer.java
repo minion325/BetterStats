@@ -5,9 +5,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class StatPlayer {
 
@@ -15,7 +15,7 @@ public class StatPlayer {
     private String name;
 
     //this map contains all the stats
-    private Map<Stat, Double> baseValues = new ConcurrentHashMap<>();
+    private Map<Stat, Double> baseValues = new HashMap<>();
 
     //this map should contain normal stat types
     private Map<Stat, Double> upToDateValues = new HashMap<>();
@@ -51,7 +51,7 @@ public class StatPlayer {
         this.upToDateValues.forEach((stat, aDouble) -> this.baseValues.replace(stat, aDouble));
     }
 
-    protected void flushChanges(Stat... stats) {
+    protected void flushChanges(List<Stat> stats) {
         for (Stat stat : stats) {
             if (this.upToDateValues.containsKey(stat))
                 this.baseValues.replace(stat, this.upToDateValues.get(stat));
@@ -66,8 +66,16 @@ public class StatPlayer {
 
     protected void addChanges(Map<Stat, Double> changes) {
         for (Stat stat : changes.keySet()) {
-            baseValues.computeIfPresent(stat, (statistic, aDouble) -> aDouble + changes.get(statistic));
+            upToDateValues.computeIfPresent(stat, (statistic, aDouble) -> aDouble + changes.get(statistic));
         }
+    }
+
+    protected Map<Stat, Double> getData() {
+        return new HashMap<>(baseValues);
+    }
+
+    public StatPlayerSnapshot snapshot() {
+        return new StatPlayerSnapshot(this);
     }
 
     public double getStat(Stat stat) {

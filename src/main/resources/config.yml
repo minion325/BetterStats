@@ -8,10 +8,26 @@ sql:
   password: 'password'
   database: 'database'
 
-#server name for your stats (If you are using one database for multiple servers, this will ensure that each server can have their own stats)
+#-Server name for your stats (If you are using one database for multiple servers,
+#this will ensure that each server can have their own stats)
 server-name: 'minecraft_server'
 
-#How often cached stats should be cleared in seconds
-#This only clears cached data that is no longer relevant
-#eg. If the stats for an offline player was loaded, it would clear that but not stats loaded for online players
+#-How often cached stats should be cleared in seconds
+#-This only clears cached data that is no longer relevant eg. If the stats
+#for an offline player was loaded, it would clear that but not stats loaded for online players
 cache-clearing-interval: 300
+
+#-How often should stats be saved to disk/database in seconds
+#-A smaller number would save the data more often so in the case of a server crash
+#the data loss will be minimal. However, saving very often will be resource intensive.
+#By default this is set to 300 seconds(5 mins)
+autosave-interval: 300
+
+#-If you are using this plugin with Bungeecord AND using this plugin to access data that
+#is stored and shared among multiple servers for example a bedwars plugin where you will have lobby and
+#game servers all accessing the same database for stats this should be set to true.
+#-For the majority of cases though such as in prison/survival/faction servers, this should be set to false.
+multiserver: false
+
+#-Whether this plugin should hook into PlaceholderAPI
+use-placeholders: true

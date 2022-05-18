@@ -39,7 +39,7 @@ public class BetterStatsCommand {
     @Subcommand("parse")
     @AutoComplete("@stats @players")
     @CommandPermission("betterstats.parse")
-    public void parseCommand(BukkitActor actor, String statString, @Optional String playerName) {
+    public void parseCommand(BukkitActor actor,@Named("statistic name") String statString, @Optional String playerName) {
         Stat toParse = BetterStats.getAPI().getStat(statString.toLowerCase(Locale.ROOT));
         if (toParse == null) {
             actor.getSender().sendMessage(ChatColor.GRAY + "There is no statistic with that name", ChatColor.GRAY + "Use " + ChatColor.AQUA + "/betterstats list" + ChatColor.GRAY + " to get a list of statistics");

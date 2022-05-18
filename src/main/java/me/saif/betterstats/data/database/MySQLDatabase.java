@@ -28,7 +28,7 @@ public class MySQLDatabase extends Database {
         config.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + database);
 
         this.source = new HikariDataSource(config);
-        Logger.getGlobal().info("Connection to database established");
+        Logger.getGlobal().info("Connection to database established: " + this.source.getPoolName());
     }
 
     @Override
