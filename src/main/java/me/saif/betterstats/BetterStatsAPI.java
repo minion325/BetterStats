@@ -1,6 +1,8 @@
 package me.saif.betterstats;
 
+import me.saif.betterstats.leaderboard.Leaderboard;
 import me.saif.betterstats.player.StatPlayer;
+import me.saif.betterstats.statistics.LeaderboardStat;
 import me.saif.betterstats.statistics.Stat;
 import me.saif.betterstats.utils.Callback;
 import org.bukkit.OfflinePlayer;
@@ -136,5 +138,9 @@ public class BetterStatsAPI {
      */
     public void setMultiServer(boolean multiServer){
         plugin.setMultiServer(true);
+    }
+
+    public <T extends Stat & LeaderboardStat> Leaderboard getLeaderboard(T stat) {
+        return null;
     }
 }

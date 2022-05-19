@@ -5,6 +5,7 @@ import me.saif.betterstats.data.DataManger;
 import me.saif.betterstats.data.MySQLDataManager;
 import me.saif.betterstats.data.SQLiteDataManager;
 import me.saif.betterstats.hooks.PlaceholderAPIHook;
+import me.saif.betterstats.leaderboard.LeaderboardManager;
 import me.saif.betterstats.player.StatPlayerManager;
 import me.saif.betterstats.statistics.Stat;
 import me.saif.betterstats.statistics.StatisticManager;
@@ -35,6 +36,8 @@ public final class BetterStats extends JavaPlugin {
     private StatisticManager statisticManager;
     private StatPlayerManager statPlayerManager;
     private DataManger dataManger;
+    private LeaderboardManager leaderboardManager;
+
     private boolean multiServer = false;
 
     @Override
@@ -50,9 +53,9 @@ public final class BetterStats extends JavaPlugin {
         else {
             this.dataManger = new SQLiteDataManager(this, getConfig().getString("server-name", "minecraft_server"));
         }
-
         this.statisticManager = new StatisticManager(this);
         this.statPlayerManager = new StatPlayerManager(this);
+        this.leaderboardManager = new LeaderboardManager(this);
 
         Bukkit.getPluginManager().registerEvents(this.statisticManager, this);
         Bukkit.getPluginManager().registerEvents(this.statPlayerManager, this);
