@@ -30,7 +30,10 @@ public final class BetterStats extends JavaPlugin {
     private StatisticManager statisticManager;
     private StatPlayerManager statPlayerManager;
     private DataManger dataManger;
+
     private boolean multiServer = false;
+    private String channelName;
+    private String serverName;
 
     @Override
     public void onEnable() {
@@ -38,12 +41,15 @@ public final class BetterStats extends JavaPlugin {
 
         this.saveDefaultConfig();
 
-        this.setMultiServer(this.multiServer = getConfig().getBoolean("multiserver", false));
+        this.serverName = getConfig().getString("server-name", "minecraft_server").toLowerCase();
+        this.channelName = this.getName().toLowerCase() + ":" + serverName;
+        System.out.println(this.channelName);
+        //this.setMultiServer(this.multiServer = getConfig().getBoolean("multiserver", false));
 
         if (getConfig().getBoolean("sql.mysql", false))
-            this.dataManger = new MySQLDataManager(this, getConfig().getString("server-name", "minecraft_server"));
+            this.dataManger = new MySQLDataManager(this, serverName);
         else {
-            this.dataManger = new SQLiteDataManager(this, getConfig().getString("server-name", "minecraft_server"));
+            this.dataManger = new SQLiteDataManager(this, serverName);
         }
 
         this.statisticManager = new StatisticManager(this);
@@ -56,6 +62,10 @@ public final class BetterStats extends JavaPlugin {
         if (getConfig().getBoolean("use-placeholders", true))
             hookPAPI();
         setupMetrics();
+
+
+        Bukkit.getMessenger().registerOutgoingPluginChannel(this, this.channelName);
+        Bukkit.getMessenger().registerIncomingPluginChannel(this, this.channelName, this.statPlayerManager);
     }
 
     private void hookPAPI() {
@@ -88,8 +98,10 @@ public final class BetterStats extends JavaPlugin {
     @Override
     public void onDisable() {
         this.dataManger.finishUp();
-        Bukkit.getMessenger().unregisterIncomingPluginChannel(this);
-        Bukkit.getMessenger().unregisterOutgoingPluginChannel(this);
+        if (multiServer) {
+            Bukkit.getMessenger().unregisterIncomingPluginChannel(this);
+            Bukkit.getMessenger().unregisterOutgoingPluginChannel(this);
+        }
     }
 
     public static BetterStatsAPI getAPI() {
@@ -115,12 +127,18 @@ public final class BetterStats extends JavaPlugin {
     public void setMultiServer(boolean multiServer) {
         if (this.multiServer == multiServer)
             return;
+        if (this.dataManger instanceof SQLiteDataManager)
+            return;
         if (multiServer) {
-            Bukkit.getMessenger().registerOutgoingPluginChannel(this, this.getName() + "_" + getConfig().getString("server-name", "minecraft_server"));
-            Bukkit.getMessenger().registerIncomingPluginChannel(this, this.getName() + "_" + getConfig().getString("server-name", "minecraft_server"), this.statPlayerManager);
+            Bukkit.getMessenger().registerOutgoingPluginChannel(this, this.channelName);
+            Bukkit.getMessenger().registerIncomingPluginChannel(this, this.channelName, this.statPlayerManager);
         } else {
             Bukkit.getMessenger().unregisterIncomingPluginChannel(this);
             Bukkit.getMessenger().unregisterOutgoingPluginChannel(this);
         }
+    }
+
+    public String getChannelName() {
+        return channelName;
     }
 }

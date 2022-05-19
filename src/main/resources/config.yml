@@ -10,6 +10,7 @@ sql:
 
 #-Server name for your stats (If you are using one database for multiple servers,
 #this will ensure that each server can have their own stats)
+#-Case-insensitive. This is converted to a lowercase string
 server-name: 'minecraft_server'
 
 #-How often cached stats should be cleared in seconds
@@ -27,6 +28,7 @@ autosave-interval: 300
 #is stored and shared among multiple servers for example a bedwars plugin where you will have lobby and
 #game servers all accessing the same database for stats this should be set to true.
 #-For the majority of cases though such as in prison/survival/faction servers, this should be set to false.
+#-Your server must also be using sql for it to work.
 multiserver: false
 
 #-Whether this plugin should hook into PlaceholderAPI

@@ -1,7 +1,5 @@
 package me.saif.betterstats.player;
 
-import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteStreams;
 import me.saif.betterstats.BetterStats;
 import me.saif.betterstats.data.DataManger;
 import me.saif.betterstats.statistics.Stat;
@@ -14,6 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.messaging.PluginMessageListener;
@@ -77,8 +76,17 @@ public class StatPlayerManager extends Manager<BetterStats> implements PluginMes
 
     @Override
     public void onPluginMessageReceived(@NotNull String channel, @NotNull Player player, @NotNull byte[] message) {
-        ByteArrayDataInput in = ByteStreams.newDataInput(message);
-        System.out.println(in.readUTF());
+        System.out.println("Message received");
+        System.out.println(new String(message));
+    }
+
+    private void sendMessage(Player player) {
+        player.sendPluginMessage(getPlugin(), getPlugin().getChannelName(), "Hello".getBytes());
+    }
+
+    @EventHandler
+    private void onPlayerInteract(PlayerInteractEvent event){
+        sendMessage(event.getPlayer());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
