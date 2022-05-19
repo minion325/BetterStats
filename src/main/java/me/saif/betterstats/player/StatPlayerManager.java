@@ -193,7 +193,6 @@ public class StatPlayerManager extends Manager<BetterStats> implements PluginMes
         }
     }
 
-    //TODO
     private void saveStatistics(Set<StatPlayer> statPlayers, List<Stat> stats) {
         Map<UUID, StatPlayerSnapshot> data = new HashMap<>();
         for (StatPlayer statPlayer : statPlayers) {
