@@ -13,7 +13,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-public class StatisticManager extends Manager {
+public class StatisticManager extends Manager<BetterStats> {
 
     private final Map<Class<? extends Stat>, Stat> classStatMap = new ConcurrentHashMap<>();
     private final Map<String, Stat> nameStatMap = new ConcurrentHashMap<>();
@@ -49,36 +49,46 @@ public class StatisticManager extends Manager {
 
         Set<Stat> toRegister = new HashSet<>();
         for (Stat stat : stats) {
-            if (nameStatMap.containsKey(stat.getInternalName())) {
-                getPlugin().getLogger().warning("Already a registered stat with the name: " + stat.getInternalName());
-                getPlugin().getLogger().warning("Ignoring registration of " + stat.getClass());
-                continue;
+            try {
+                if (nameStatMap.containsKey(stat.getInternalName())) {
+                    getPlugin().getLogger().warning("Already a registered stat with the name: " + stat.getInternalName());
+                    getPlugin().getLogger().warning("Ignoring registration of " + stat.getClass());
+                    continue;
+                }
+                if (classStatMap.containsKey(stat.getClass())) {
+                    getPlugin().getLogger().warning("An instance of " + stat.getInternalName() + " is already registered.");
+                    getPlugin().getLogger().warning("Ignoring registration of " + stat.getClass());
+                    continue;
+                }
+                if (registeredStats.contains(stat)) {
+                    getPlugin().getLogger().warning(stat.getInternalName() + " is already registered for " + plugin.getName());
+                    getPlugin().getLogger().warning("Ignoring registration of " + stat.getClass());
+                    continue;
+                }
+                getPlugin().getLogger().info("Registering " + stat.getInternalName() + " for " + plugin.getName());
+                if (stat instanceof Listener)
+                    Bukkit.getPluginManager().registerEvents((Listener) stat, plugin);
+                toRegister.add(stat);
+                registeredStats.add(stat);
+                nameStatMap.put(stat.getInternalName(), stat);
+                classStatMap.put(stat.getClass(), stat);
+            } catch (Exception e) {
+                plugin.getLogger().severe("Error registering " + stat.getInternalName() + " for " + plugin.getName());
+                e.printStackTrace();
             }
-            if (classStatMap.containsKey(stat.getClass())) {
-                getPlugin().getLogger().warning("An instance of " + stat.getInternalName() + " is already registered.");
-                getPlugin().getLogger().warning("Ignoring registration of " + stat.getClass());
-                continue;
-            }
-            if (registeredStats.contains(stat)) {
-                getPlugin().getLogger().warning(stat.getInternalName() + " is already registered for " + plugin.getName());
-                getPlugin().getLogger().warning("Ignoring registration of " + stat.getClass());
-                continue;
-            }
-            getPlugin().getLogger().info("Registering " + stat.getInternalName() + " for " + plugin.getName());
-            if (stat instanceof Listener)
-                Bukkit.getPluginManager().registerEvents((Listener) stat, plugin);
-            toRegister.add(stat);
-            registeredStats.add(stat);
-            nameStatMap.put(stat.getInternalName(), stat);
-            classStatMap.put(stat.getClass(), stat);
         }
+
         this.stats.addAll(toRegister);
         this.stats.sort(Comparator.comparing(Stat::getName));
         this.getPlugin().getDataManger().registerStatistics(toRegister.toArray(new Stat[]{}));
         this.getPlugin().getStatPlayerManager().registerStatistics(toRegister.toArray(new Stat[]{}));
-        //sort out loading of data using toRegister
         for (Stat stat : toRegister)
-            stat.onRegister();
+            try {
+                stat.onRegister();
+            } catch (Exception e) {
+                plugin.getLogger().severe("Error executing onRegister for Stat:" + stat.getInternalName());
+                e.printStackTrace();
+            }
     }
 
     public void unRegisterStats(JavaPlugin plugin, Stat... stats) {
@@ -128,6 +138,18 @@ public class StatisticManager extends Manager {
 
     public List<Stat> getPersistentStats() {
         return stats.stream().filter(Stat::isPersistent).collect(Collectors.toList());
+    }
+
+    public List<Stat> getExternalStats() {
+        return stats.stream().filter(stat -> stat instanceof OfflineExternalStat).collect(Collectors.toList());
+    }
+
+    public List<Stat> getDependantStats() {
+        return stats.stream().filter(stat -> stat instanceof DependantStat).collect(Collectors.toList());
+    }
+
+    public List<Stat> getLeaderboardStats() {
+        return stats.stream().filter(stat -> stat instanceof LeaderboardStat).collect(Collectors.toList());
     }
 
     public List<Stat> getStatsForPlugin(JavaPlugin plugin) {

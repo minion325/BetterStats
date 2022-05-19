@@ -30,12 +30,15 @@ public final class BetterStats extends JavaPlugin {
     private StatisticManager statisticManager;
     private StatPlayerManager statPlayerManager;
     private DataManger dataManger;
+    private boolean multiServer = false;
 
     @Override
     public void onEnable() {
         API = new BetterStatsAPI(this);
 
         this.saveDefaultConfig();
+
+        this.setMultiServer(this.multiServer = getConfig().getBoolean("multiserver", false));
 
         if (getConfig().getBoolean("sql.mysql", false))
             this.dataManger = new MySQLDataManager(this, getConfig().getString("server-name", "minecraft_server"));
@@ -50,7 +53,8 @@ public final class BetterStats extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(this.statPlayerManager, this);
 
         setupCommands();
-        hookPAPI();
+        if (getConfig().getBoolean("use-placeholders", true))
+            hookPAPI();
         setupMetrics();
     }
 
@@ -68,7 +72,7 @@ public final class BetterStats extends JavaPlugin {
     private void setupCommands() {
         CommandHandler commandHandler = new BukkitHandler(this)
                 .getAutoCompleter().registerSuggestion("stats", (args, sender, command) -> {
-                    String lastArg = args.get(args.size()-1).toLowerCase(Locale.ROOT);
+                    String lastArg = args.get(args.size() - 1).toLowerCase(Locale.ROOT);
                     return BetterStats.getAPI().getRegisteredStats().stream().map(Stat::getInternalName).filter(s -> s.startsWith(lastArg)).collect(Collectors.toList());
                 })
                 .registerSuggestion("players", (args, sender, command) -> {
@@ -84,6 +88,8 @@ public final class BetterStats extends JavaPlugin {
     @Override
     public void onDisable() {
         this.dataManger.finishUp();
+        Bukkit.getMessenger().unregisterIncomingPluginChannel(this);
+        Bukkit.getMessenger().unregisterOutgoingPluginChannel(this);
     }
 
     public static BetterStatsAPI getAPI() {
@@ -100,5 +106,21 @@ public final class BetterStats extends JavaPlugin {
 
     public DataManger getDataManger() {
         return dataManger;
+    }
+
+    public boolean isMultiServer() {
+        return multiServer;
+    }
+
+    public void setMultiServer(boolean multiServer) {
+        if (this.multiServer == multiServer)
+            return;
+        if (multiServer) {
+            Bukkit.getMessenger().registerOutgoingPluginChannel(this, this.getName() + "_" + getConfig().getString("server-name", "minecraft_server"));
+            Bukkit.getMessenger().registerIncomingPluginChannel(this, this.getName() + "_" + getConfig().getString("server-name", "minecraft_server"), this.statPlayerManager);
+        } else {
+            Bukkit.getMessenger().unregisterIncomingPluginChannel(this);
+            Bukkit.getMessenger().unregisterOutgoingPluginChannel(this);
+        }
     }
 }

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.logging.Logger;
 
 public class SQLiteDatabase extends Database{
 
@@ -23,10 +24,10 @@ public class SQLiteDatabase extends Database{
                 this.file.createNewFile();
             Class.forName("org.sqlite.JDBC");
             connection = DriverManager.getConnection("jdbc:sqlite:" + this.file);
+            Logger.getGlobal().info("Opened database at " + this.file + " successfully");
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("Opened database at " + this.file + " successfully");
     }
 
     @Override

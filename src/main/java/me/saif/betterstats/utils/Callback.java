@@ -1,7 +1,6 @@
 package me.saif.betterstats.utils;
 
-import org.bukkit.Bukkit;
-import org.bukkit.plugin.java.JavaPlugin;
+import org.checkerframework.checker.units.qual.C;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,26 +8,23 @@ import java.util.List;
 public class Callback<T> {
 
     private final List<Runnable> runnables = new ArrayList<>();
-    private final JavaPlugin plugin;
     private T result;
     private boolean results = false;
 
-    public Callback(JavaPlugin plugin) {
-        this.plugin = plugin;
-    }
-
-    public synchronized void addResultListener(Runnable runnable) {
+    public void addResultListener(Runnable runnable) {
         if (!this.hasResults())
             this.runnables.add(runnable);
         else {
-            if (Bukkit.isPrimaryThread())
-                runnable.run();
-            else
-                Bukkit.getScheduler().scheduleSyncDelayedTask(this.plugin, runnable);
+            runnable.run();
         }
     }
 
-    public synchronized void setResult(T result) {
+    /**
+     * Ideally this method should be called from the main thread.
+     *
+     * @param result Result that is being proviaded to the callback.
+     */
+    public void setResult(T result) {
         if (this.hasResults())
             throw new IllegalStateException("Callback already has a result");
         this.result = result;
@@ -37,15 +33,13 @@ public class Callback<T> {
         if (this.runnables.size() == 0)
             return;
 
-        Bukkit.getScheduler().scheduleSyncDelayedTask(this.plugin, () -> {
-            for (Runnable runnable : this.runnables) {
-                runnable.run();
-            }
-            this.runnables.clear();
-        });
+        for (Runnable runnable : this.runnables) {
+            runnable.run();
+        }
+        this.runnables.clear();
     }
 
-    public synchronized boolean hasResults() {
+    public boolean hasResults() {
         return this.results;
     }
 
@@ -53,7 +47,14 @@ public class Callback<T> {
         return result;
     }
 
+    public static<T>Callback<T> withResult(T result){
+        Callback<T> callback = new Callback<>();
+        callback.setResult(result);
+        return callback;
+    }
+
     @Override
+
     public String toString() {
         return "Callback{" +
                 ", result=" + result +

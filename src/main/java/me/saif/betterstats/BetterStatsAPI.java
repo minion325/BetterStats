@@ -128,4 +128,13 @@ public class BetterStatsAPI {
     public Stat getStat(String name) {
         return this.plugin.getStatisticManager().getStatistic(name);
     }
+
+    /**
+     * This should be called if your plugin is setup in bungee mode and want to make sure that multiserver mode is enabled.
+     * It does not change the value in the config.yml
+     * @param multiServer Whether this plugin should be in multiserver mode.
+     */
+    public void setMultiServer(boolean multiServer){
+        plugin.setMultiServer(true);
+    }
 }
