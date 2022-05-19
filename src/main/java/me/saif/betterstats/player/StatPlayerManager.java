@@ -1,7 +1,5 @@
 package me.saif.betterstats.player;
 
-import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteStreams;
 import me.saif.betterstats.BetterStats;
 import me.saif.betterstats.data.DataManger;
 import me.saif.betterstats.statistics.Stat;
@@ -16,16 +14,14 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class StatPlayerManager extends Manager<BetterStats> implements PluginMessageListener {
+public class StatPlayerManager extends Manager<BetterStats> {
 
     private final DataManger dataManger;
     private final StatisticManager statManager;
@@ -73,12 +69,6 @@ public class StatPlayerManager extends Manager<BetterStats> implements PluginMes
             getPlugin().getLogger().info("Cleared " + removed.size() + " cached stat entries");
 
         }, getPlugin().getConfig().getInt("cache-clearing-interval") * 20L, getPlugin().getConfig().getInt("cache-clearing-interval") * 20L);
-    }
-
-    @Override
-    public void onPluginMessageReceived(@NotNull String channel, @NotNull Player player, @NotNull byte[] message) {
-        ByteArrayDataInput in = ByteStreams.newDataInput(message);
-        System.out.println(in.readUTF());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

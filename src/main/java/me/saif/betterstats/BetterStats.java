@@ -113,14 +113,6 @@ public final class BetterStats extends JavaPlugin {
     }
 
     public void setMultiServer(boolean multiServer) {
-        if (this.multiServer == multiServer)
-            return;
-        if (multiServer) {
-            Bukkit.getMessenger().registerOutgoingPluginChannel(this, this.getName() + "_" + getConfig().getString("server-name", "minecraft_server"));
-            Bukkit.getMessenger().registerIncomingPluginChannel(this, this.getName() + "_" + getConfig().getString("server-name", "minecraft_server"), this.statPlayerManager);
-        } else {
-            Bukkit.getMessenger().unregisterIncomingPluginChannel(this);
-            Bukkit.getMessenger().unregisterOutgoingPluginChannel(this);
-        }
+        this.multiServer = multiServer;
     }
 }
