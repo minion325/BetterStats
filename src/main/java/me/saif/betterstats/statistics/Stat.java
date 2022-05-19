@@ -13,7 +13,7 @@ public abstract class Stat {
     public abstract double getDefaultValue();
 
     public final boolean isPersistent() {
-        return (this instanceof LeaderboardStat || this instanceof OnlineExternalStat || (!(this instanceof DependantStat) && !(this instanceof OfflineExternalStat)));
+        return (this instanceof OnlineExternalStat || (!(this instanceof DependantStat) && !(this instanceof OfflineExternalStat)));
     }
 
     public abstract String format(double value);

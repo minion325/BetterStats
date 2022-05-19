@@ -148,10 +148,6 @@ public class StatisticManager extends Manager<BetterStats> {
         return stats.stream().filter(stat -> stat instanceof DependantStat).collect(Collectors.toList());
     }
 
-    public List<Stat> getLeaderboardStats() {
-        return stats.stream().filter(stat -> stat instanceof LeaderboardStat).collect(Collectors.toList());
-    }
-
     public List<Stat> getStatsForPlugin(JavaPlugin plugin) {
         return new ArrayList<>(pluginStatsMap.get(plugin));
     }
