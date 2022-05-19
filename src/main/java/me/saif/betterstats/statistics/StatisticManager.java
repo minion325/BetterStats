@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 
 public class StatisticManager extends Manager<BetterStats> {
 
-    private final Map<Class<? extends Stat>, Stat> classStatMap = new ConcurrentHashMap<>();
+    private final Map<Class<? extends Stat>, Set<Stat>> classStatMap = new ConcurrentHashMap<>();
     private final Map<String, Stat> nameStatMap = new ConcurrentHashMap<>();
     private final Map<JavaPlugin, Set<Stat>> pluginStatsMap = new ConcurrentHashMap<>();
     private final List<Stat> stats = new ArrayList<>();
@@ -29,7 +29,7 @@ public class StatisticManager extends Manager<BetterStats> {
         return this.nameStatMap.get(name);
     }
 
-    public Stat getStatistic(Class<? extends Stat> clazz) {
+    public Set<Stat> getStatistic(Class<? extends Stat> clazz) {
         return this.classStatMap.get(clazz);
     }
 
@@ -52,17 +52,12 @@ public class StatisticManager extends Manager<BetterStats> {
             try {
                 if (nameStatMap.containsKey(stat.getInternalName())) {
                     getPlugin().getLogger().warning("Already a registered stat with the name: " + stat.getInternalName());
-                    getPlugin().getLogger().warning("Ignoring registration of " + stat.getClass());
-                    continue;
-                }
-                if (classStatMap.containsKey(stat.getClass())) {
-                    getPlugin().getLogger().warning("An instance of " + stat.getInternalName() + " is already registered.");
-                    getPlugin().getLogger().warning("Ignoring registration of " + stat.getClass());
+                    getPlugin().getLogger().warning("Ignoring registration of " + stat.getInternalName());
                     continue;
                 }
                 if (registeredStats.contains(stat)) {
                     getPlugin().getLogger().warning(stat.getInternalName() + " is already registered for " + plugin.getName());
-                    getPlugin().getLogger().warning("Ignoring registration of " + stat.getClass());
+                    getPlugin().getLogger().warning("Ignoring registration of " + stat.getInternalName());
                     continue;
                 }
                 getPlugin().getLogger().info("Registering " + stat.getInternalName() + " for " + plugin.getName());
@@ -71,7 +66,11 @@ public class StatisticManager extends Manager<BetterStats> {
                 toRegister.add(stat);
                 registeredStats.add(stat);
                 nameStatMap.put(stat.getInternalName(), stat);
-                classStatMap.put(stat.getClass(), stat);
+
+                Set<Stat> statSet = classStatMap.get(stat.getClass());
+                if (statSet == null)
+                    this.classStatMap.put(stat.getClass(), statSet = new HashSet<>());
+                statSet.add(stat);
             } catch (Exception e) {
                 plugin.getLogger().severe("Error registering " + stat.getInternalName() + " for " + plugin.getName());
                 e.printStackTrace();
@@ -108,7 +107,11 @@ public class StatisticManager extends Manager<BetterStats> {
         this.getPlugin().getStatPlayerManager().unRegisterStatistics(stats);
         for (Stat stat : setWeGonnaUse) {
             this.nameStatMap.remove(stat.getInternalName());
-            this.classStatMap.remove(stat.getClass());
+            this.classStatMap.get(stat.getClass()).remove(stat);
+
+            if (classStatMap.get(stat.getClass()).isEmpty())
+                classStatMap.remove(stat.getClass());
+
             this.pluginStatsMap.get(plugin).remove(stat);
             this.stats.remove(stat);
             if (stat instanceof Listener)
@@ -123,7 +126,11 @@ public class StatisticManager extends Manager<BetterStats> {
             this.getPlugin().getStatPlayerManager().unRegisterStatistics(stats.toArray(new Stat[]{}));
             for (Stat stat : stats) {
                 this.nameStatMap.remove(stat.getInternalName());
-                this.classStatMap.remove(stat.getClass());
+                this.classStatMap.get(stat.getClass()).remove(stat);
+
+                if (classStatMap.get(stat.getClass()).isEmpty())
+                    classStatMap.remove(stat.getClass());
+
                 this.stats.remove(stat);
                 if (stat instanceof Listener)
                     HandlerList.unregisterAll((Listener) stat);
@@ -170,12 +177,17 @@ public class StatisticManager extends Manager<BetterStats> {
         unRegisterStats((JavaPlugin) event.getPlugin());
     }
 
-    public <T extends Stat> T getStat(Class<T> statClass) {
-        Stat stat = classStatMap.get(statClass);
+    public <T extends Stat> Set<T> getStats(Class<T> statClass) {
+        Set<T> set = new HashSet<>();
+        Set<Stat> fromClassMap = classStatMap.get(statClass);
 
-        if (stat != null)
-            return statClass.cast(stat);
-        return null;
+        if (fromClassMap != null) {
+            for (Stat stat : classStatMap.get(statClass)) {
+                set.add(statClass.cast(stat));
+            }
+        }
+        return set;
+
     }
 
 

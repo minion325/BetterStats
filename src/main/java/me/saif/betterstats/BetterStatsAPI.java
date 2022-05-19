@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public class BetterStatsAPI {
@@ -98,8 +99,8 @@ public class BetterStatsAPI {
      * @param <T> Instance of stat
      * @return an instance of the stat registered with the statClass. returns null if none is registered
      */
-    public <T extends Stat> T  getStat(Class<T> statClass) {
-        return this.plugin.getStatisticManager().getStat(statClass);
+    public <T extends Stat> Set<T> getStat(Class<T> statClass) {
+        return this.plugin.getStatisticManager().getStats(statClass);
     }
 
     /**
