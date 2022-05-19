@@ -9,15 +9,20 @@ import me.saif.betterstats.player.StatPlayerManager;
 import me.saif.betterstats.statistics.Stat;
 import me.saif.betterstats.statistics.StatisticManager;
 import org.bstats.bukkit.Metrics;
+import org.bstats.charts.DrilldownPie;
 import org.bstats.charts.SimplePie;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import revxrsal.commands.CommandHandler;
 import revxrsal.commands.bukkit.core.BukkitHandler;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -67,6 +72,22 @@ public final class BetterStats extends JavaPlugin {
     private void setupMetrics() {
         Metrics metrics = new Metrics(this, bStatsID);
         metrics.addCustomChart(new SimplePie("storage_method", () -> this.dataManger.getType()));
+        metrics.addCustomChart(new DrilldownPie("registered_statistics", () -> {
+            Map<String,Map<String, Integer>> pluginMap = new HashMap<>();
+            for (Plugin plugin : Bukkit.getPluginManager().getPlugins()) {
+                if (plugin instanceof JavaPlugin) {
+                    List<Stat> stats = this.statisticManager.getStatsForPlugin(((JavaPlugin) plugin));
+                    if (stats != null && stats.size() != 0) {
+                        Map<String,Integer> map = new HashMap<>();
+                        for (Stat stat : stats) {
+                            map.put(stat.getName(), 1);
+                        }
+                        pluginMap.put(plugin.getName(), map);
+                    }
+                }
+            }
+            return pluginMap;
+        }));
     }
 
     private void setupCommands() {
@@ -88,8 +109,6 @@ public final class BetterStats extends JavaPlugin {
     @Override
     public void onDisable() {
         this.dataManger.finishUp();
-        Bukkit.getMessenger().unregisterIncomingPluginChannel(this);
-        Bukkit.getMessenger().unregisterOutgoingPluginChannel(this);
     }
 
     public static BetterStatsAPI getAPI() {
